@@ -1,0 +1,127 @@
+install auth
+composer require laravel/ui --dev
+php artisan ui bootstrap --auth
+npm install && npm run dev
+
+install spatie
+composer require spatie/laravel-permission
+//tambahkan dicommendform
+php artisan vendor:publish --provider="Spatie\Permission\PermissionServiceProvider"
+//migrate database
+php artisan migrate
+
+
+cara penggunaan
+-masuk ke model user dan tambahkan
+use Spatie\Permission\Traits\HasRoles;
+use HasRoles;
+
+Buat Seeder
+php artisan make:seeder PermissionDemoSeeder
+
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
+
+ public function run()
+    {
+        // reset cahced roles and permission
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+
+        // create permissions
+        Permission::create(['name' => 'view posts']);
+        Permission::create(['name' => 'create posts']);
+        Permission::create(['name' => 'edit posts']);
+        Permission::create(['name' => 'delete posts']);
+        Permission::create(['name' => 'publish posts']);
+        Permission::create(['name' => 'unpublish posts']);
+
+        //create roles and assign existing permissions
+        $writerRole = Role::create(['name' => 'writer']);
+        $writerRole->givePermissionTo('view posts');
+        $writerRole->givePermissionTo('create posts');
+        $writerRole->givePermissionTo('edit posts');
+        $writerRole->givePermissionTo('delete posts');
+
+        $adminRole = Role::create(['name' => 'admin']);
+        $adminRole->givePermissionTo('view posts');
+        $adminRole->givePermissionTo('create posts');
+        $adminRole->givePermissionTo('edit posts');
+        $adminRole->givePermissionTo('delete posts');
+        $adminRole->givePermissionTo('publish posts');
+        $adminRole->givePermissionTo('unpublish posts');
+
+        $superadminRole = Role::create(['name' => 'super-admin']);
+        // gets all permissions via Gate::before rule
+
+        // create demo users
+        $user = User::factory()->create([
+            'name' => 'Example user',
+            'email' => 'writer@qadrlabs.com',
+            'password' => bcrypt('12345678')
+        ]);
+        $user->assignRole($writerRole);
+
+        $user = User::factory()->create([
+            'name' => 'Example admin user',
+            'email' => 'admin@qadrlabs.com',
+            'password' => bcrypt('12345678')
+        ]);
+        $user->assignRole($adminRole);
+
+        $user = User::factory()->create([
+            'name' => 'Example superadmin user',
+            'email' => 'superadmin@qadrlabs.com',
+            'password' => bcrypt('12345678')
+        ]);
+        $user->assignRole($superadminRole);
+    }
+
+tambahkan di database seeder
+$this->call(PermissionDemoSeeder::class);
+
+
+Di class PermissionDemoSeeder, kita menambahkan role super-admin dan di dalamnya kita belum mendefinisikan 
+permission untuk role tersebut. Di sini kita akan coba memberikan akses super admin melalui 
+gate di dalam AuthServiceProvider. Buka file app/Providers/AuthServiceProvider.php, lalu kita modifikasi method boot().
+
+ public function boot()
+    {
+        $this->registerPolicies();
+
+        // Implicitly grant "Super Admin" role all permission checks using can()
+        Gate::before(function ($user, $ability) {
+            if ($user->hasRole('super-admin')) {
+                return true;
+            }
+        });
+    }
+
+tambahkan dikarnel
+ protected $routeMiddleware = [
+                // ...
+
+        'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+        'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+        'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
+    ];
+
+
+tambahkan pada kontroller
+  public function __construct()
+    {
+        $this->middleware('permission:view posts', ['only' => ['index']]);
+        $this->middleware('permission:create posts', ['only' => ['create', 'store']]);
+        $this->middleware('permission:edit posts', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:delete posts', ['only' => ['destroy']]);
+        $this->middleware('permission:publish posts', ['only' => ['publish']]);
+        $this->middleware('permission:unpublish posts', ['only' => ['unpublish']]);
+    }
+
+
+
+
+
+note lain :
+https://qadrlabs.com/post/belajar-laravel-8-roles-and-permissions
+https://www.kawankoding.id/belajar-laravel-roles-permission/

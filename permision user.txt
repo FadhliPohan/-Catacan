@@ -118,10 +118,27 @@ tambahkan pada kontroller
         $this->middleware('permission:unpublish posts', ['only' => ['unpublish']]);
     }
 
+register controller
+//untuk menambah role pada register
+$user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+        ]);
 
+$user->assignRole($data['role']);
+        return $user;
+
+
+
+tambahkan untuk menampilkan fungsi
+ @can('edit posts', Post::class)
+        <a href="{{ route('post.edit', $post->id) }}" class="btn btn-sm btn-primary">EDIT</a>
+    @endcan
 
 
 
 note lain :
 https://qadrlabs.com/post/belajar-laravel-8-roles-and-permissions
 https://www.kawankoding.id/belajar-laravel-roles-permission/
+https://imansugirman.com/menggunakan-laravel-permission-dari-spatie

@@ -1,0 +1,47 @@
+ store biasa
+ public function store(Request $request)
+    {
+          $this->validate($request, [
+            'kode_produk' => 'required|unique:produk',
+            'nama_produk' => 'required',
+            'slug_produk' => 'required',
+            'deskripsi_produk' => 'required',
+            'kategori_id' => 'required',
+            'qty' => 'required|numeric',
+            'satuan' => 'required',
+            'harga' => 'required|numeric'
+        ]);
+        $itemuser = $request->user();//ambil data user yang login
+        $slug = \Str::slug($request->slug_produk);//buat slug dari input slug produk
+        $inputan = $request->all();
+        $inputan['slug_produk'] = $slug;
+        $inputan['user_id'] = $itemuser->id;
+        $inputan['status'] = 'publish';
+        $itemproduk = Produk::create($inputan);
+        return redirect()->route('produk.index')->with('success', 'Data berhasil disimpan');
+   
+    }
+
+
+cek store
+public function store(Request $request)
+    {
+         $this->validate($request, [
+            'produk_id' => 'required',
+            'harga_awal' => 'required',
+            'harga_akhir' => 'required',
+            'diskon_persen' => 'required',
+            'diskon_nominal' => 'required',
+        ]);
+        // cek dulu apakah sudah ada, produk hanya bisa masuk 1 promo
+        $cekpromo = ProdukPromo::where('produk_id', $request->produk_id)->first();
+        if ($cekpromo) {
+            return back()->with('error', 'Data sudah ada');
+        } else {
+            $itemuser = $request->user();
+            $inputan = $request->all();
+            $inputan['user_id'] = $itemuser->id;
+            $itempromo = ProdukPromo::create($inputan);
+            return redirect()->route('promo.index')->with('success', 'Data berhasil disimpan');
+        }
+    }

@@ -1,0 +1,27 @@
+ //delete Biasa
+  public function destroy($id)
+    {
+         $itemproduk = Produk::findOrFail($id);//cari berdasarkan id = $id, 
+        // kalo ga ada error page not found 404
+        if ($itemproduk->delete()) {
+            return back()->with('success', 'Data berhasil dihapus');
+        } else {
+            return back()->with('error', 'Data gagal dihapus');
+        }
+    }
+
+
+//delete IMG
+   public function destroy(Request $request, $id) {
+        $itemuser = $request->user();
+        $itemgambar = Image::where('user_id', $itemuser->id)
+                            ->where('id', $id)
+                            ->first();
+        if ($itemgambar) {
+            Storage::delete('public/dataimage', $itemgambar->url);
+            $itemgambar->delete();
+            return back()->with('success', 'Data berhasil dihapus');
+        } else {
+            return back()->with('error', 'Data tidak ditemukan');
+        }
+    }

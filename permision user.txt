@@ -137,8 +137,31 @@ tambahkan untuk menampilkan fungsi
     @endcan
 
 
+tambahkan untuk tampilan menu
+@role('manager')
+    a
+@else
+    b
+@endrole
+
+// Atau bisa juga spesifik
+
+@role('manager')
+    a
+@else
+    b
+@endrole
+
+// Bisa juga menggunakan @hasrole
+
+@hasrole('manager')
+    I am a manager!
+@else
+    I am not a manager...
+@endhasrole
 
 note lain :
 https://qadrlabs.com/post/belajar-laravel-8-roles-and-permissions
 https://www.kawankoding.id/belajar-laravel-roles-permission/
 https://imansugirman.com/menggunakan-laravel-permission-dari-spatie
+https://spatie.be/docs/laravel-permission/v4/basic-usage/blade-directives
